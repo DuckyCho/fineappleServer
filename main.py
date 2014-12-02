@@ -12,6 +12,7 @@ import datetime
 app = Flask(__name__);
 
 #초기 설정
+#secret key 생성 : http://flask.pocoo.org/docs/0.10/quickstart/#sessions
 app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
@@ -107,6 +108,9 @@ def printUserStatus(user,comment):
 
 #Application Module
 
+#veryFirstConnect
+#   사용자가 가장 처음 앱을 켜자마자 서버에 보내는 쿼리를 받는 모듈
+#   DB의 데이터를 가지고 사용자가 현재 봐야 하는 화면을 string으로 return
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect(): 
 	user = login_manager.token_loader(load_token);

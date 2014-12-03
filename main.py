@@ -18,7 +18,7 @@ login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
 app.config['MYSQL_DATABASE_USER'] = 'user';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'password';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'pword';
 app.config['MYSQL_DATABASE_DB'] = 'dbname';
 
 login_manager.init_app(app);
@@ -86,6 +86,7 @@ def load_user(email):
 
 @login_manager.token_loader
 def load_token(token):
+	print "load_token"
 	print token;
 	cursor = connectDB();
 	data = login_serializer.loads(token);
@@ -100,20 +101,21 @@ def load_token(token):
 		return None;
 
 def printUserStatus(user,comment):
-	print 'userEmail : '#+user.email;
-	print 'userLoginDate : '#+user.loginDate;
-	print 'comment : '#+comment;
+	print "userEmail : %s" %user.email;
+	print "userLoginDate : %s" %user.loginDate;
+	print "comment : %s" %comment;
 
 
 
 #Application Module
 
-#veryFirstConnect
-#   사용자가 가장 처음 앱을 켜자마자 서버에 보내는 쿼리를 받는 모듈
-#   DB의 데이터를 가지고 사용자가 현재 봐야 하는 화면을 string으로 return
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect(): 
-	user = login_manager.token_loader(load_token);
+	token,session = request.headers.get("Cookie").split(' ');
+	tokenName, tokenValue = token.split('=');
+	sessionName, sessionValue = session.split('=');
+	tokenValue = tokenValue.replace(';','');
+	user = load_token(tokenValue);
 	if user != None:
 		printUserStatus(user,'newConnection - /veryFirstConnection');
 		email = user.email;
@@ -132,7 +134,7 @@ def veryFirstConnect():
 		else:
 			return "recommend"
 	else:
-		return "curPage=login";
+		return "login";
 
 @app.route("/login", methods=["POST"])
 def login():

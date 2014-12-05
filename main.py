@@ -6,20 +6,21 @@ from flask import Flask;
 from flaskext.mysql import MySQL;
 from flask import request, session;
 from flaskext.flask_login import LoginManager, login_user, UserMixin, make_secure_token;
+#from flaskext.flask_login import LoginManager, current_user, login_required, login_user, logout_user, UserMixin, confirm_login, fresh_login_required
 from flaskext.flask_itsdangerous import URLSafeTimedSerializer;
 import datetime
+import time
 
 app = Flask(__name__);
 
 #초기 설정
-#secret key 생성 : http://flask.pocoo.org/docs/0.10/quickstart/#sessions
-app.secret_key = "secret!"
+app.secret_key = "scret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'user';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'pword';
-app.config['MYSQL_DATABASE_DB'] = 'dbname';
+app.config['MYSQL_DATABASE_USER'] = 'scret';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'secret';
+app.config['MYSQL_DATABASE_DB'] = 'secret';
 
 login_manager.init_app(app);
 mysql.init_app(app);
@@ -86,8 +87,7 @@ def load_user(email):
 
 @login_manager.token_loader
 def load_token(token):
-	print "load_token"
-	print token;
+	print "rememberToken : %s"%token;
 	cursor = connectDB();
 	data = login_serializer.loads(token);
 	user = User.getUserFromDB(cursor,data[0]);
@@ -101,16 +101,18 @@ def load_token(token):
 		return None;
 
 def printUserStatus(user,comment):
-	print "userEmail : %s" %user.email;
-	print "userLoginDate : %s" %user.loginDate;
-	print "comment : %s" %comment;
+	print "****comment : %s" %comment;
+	print "****userEmail : %s" %user.email;
+	print "****userLoginDate : %s" %user.loginDate;
 
 
 
 #Application Module
 
 @app.route("/veryFirstConnect", methods=["POST"])
-def veryFirstConnect(): 
+def veryFirstConnect():
+	time.sleep(5);
+	print request.headers;
 	token,session = request.headers.get("Cookie").split(' ');
 	tokenName, tokenValue = token.split('=');
 	sessionName, sessionValue = session.split('=');
@@ -126,10 +128,9 @@ def veryFirstConnect():
 		readTableData = cursor.fetchone();
 		cursor.execute("select * from BOOKLIST_WISH where userID='"+email+"'");
 		wishTableData = cursor.fetchone();
-
-		if not userTableData[3]:
-			return "setProfile";
-		elif (not readTableData[0]) and (not wishTableData[0]):
+		if userTableData is None:
+			return "initProfile";
+		elif (readTableData is None) and (wishTableData is None):
 			return "setBookFirst";
 		else:
 			return "recommend"
@@ -138,6 +139,7 @@ def veryFirstConnect():
 
 @app.route("/login", methods=["POST"])
 def login():
+	time.sleep(5);
 	email = request.form.get('email');
 	password = request.form.get('password'); 
 	cursor = connectDB();

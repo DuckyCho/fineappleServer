@@ -44,7 +44,7 @@ COLLATE = utf8_general_ci;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `finedb`.`USER` (
   `email` VARCHAR(45) NOT NULL,
-  `password` VARCHAR(20) NOT NULL,
+  `password` VARCHAR(40) NOT NULL,
   `userName` VARCHAR(20) NOT NULL,
   `attendOrNot` INT NULL DEFAULT 0,
   `semesterNum` INT NULL DEFAULT 1,

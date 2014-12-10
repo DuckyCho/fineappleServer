@@ -142,6 +142,44 @@ def login():
 	else:
 		return "NO";
 
+#register 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        name = request.form['userName']
+
+        con = mysql.connect()
+        cursor = con.cursor()
+
+        query = "insert into user \
+        (email, password, userName) values \
+        ('" + email +"', '" + password + "', '" + name + "');"
+        
+        cursor.execute(query)
+        con.commit()
+
+        print("success!")
+        return "OK! Query"
+    return "Error"
+
+@app.route('/register/email', methods=['POST'])
+def check_Email():
+    email = request.form['email']
+
+    con = mysql.connect()
+    cursor = con.cursor()
+
+    cursor.execute("select * from user where email='" + email + "'")
+    check_e = cursor.fetchone()
+
+    if check_e is None:
+        print("None")
+        return "None"
+    else:
+        return "exist"
+
 
 @app.route("/test", methods=["GET", "POST"])
 def test():
@@ -149,5 +187,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='0.0.0.0', port=5009);
+	app.run(debug=True, host='10.73.45.55', port=5010);
 

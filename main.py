@@ -123,9 +123,9 @@ def veryFirstConnect():
 		cursor = connectDB();
 		cursor.execute("select attendOrNot from USER where email='"+email+"'");
 		userTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_READ where userID='"+email+"'");
+		cursor.execute("select * from BOOKLIST_READ where USER_email='"+email+"'");
 		readTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_WISH where userID='"+email+"'");
+		cursor.execute("select * from BOOKLIST_WISH where USER_email='"+email+"'");
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
@@ -148,9 +148,9 @@ def login():
 		cursor = connectDB();
 		cursor.execute("select attendOrNot from USER where email='"+email+"'");
 		userTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_READ where userID='"+email+"'");
+		cursor.execute("select * from BOOKLIST_READ where USER_email='"+email+"'");
 		readTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_WISH where userID='"+email+"'");
+		cursor.execute("select * from BOOKLIST_WISH where USER_email='"+email+"'");
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
@@ -159,7 +159,7 @@ def login():
 		else:
 			return "Recommend"
 	else:
-		return "Login";
+		return "LoginFail";
 
 
 @app.route("/test", methods=["GET", "POST"])
@@ -168,5 +168,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='10.73.45.83', port=5009);
+	app.run(debug=True, host='10.73.45.83', port=5013);
 

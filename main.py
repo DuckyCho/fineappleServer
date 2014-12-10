@@ -5,20 +5,19 @@ sys.setdefaultencoding("utf-8")
 from flask import Flask;
 from flaskext.mysql import MySQL;
 from flask import request, session;
-from flaskext.flask_login import LoginManager, login_user, UserMixin, make_secure_token;
-#from flaskext.flask_login import LoginManager, current_user, login_required, login_user, logout_user, UserMixin, confirm_login, fresh_login_required
-from flaskext.flask_itsdangerous import URLSafeTimedSerializer;
+from flask_login import LoginManager, login_user, UserMixin, make_secure_token;
+from itsdangerous import URLSafeTimedSerializer;
 import datetime
 import time
 
 app = Flask(__name__);
 
 #초기 설정
-app.secret_key = "scret"
+app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'scret';
+app.config['MYSQL_DATABASE_USER'] = 'secret';
 app.config['MYSQL_DATABASE_PASSWORD'] = 'secret';
 app.config['MYSQL_DATABASE_DB'] = 'secret';
 
@@ -111,7 +110,7 @@ def printUserStatus(user,comment):
 
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect():
-	time.sleep(5);
+	#time.sleep(5);
 	print request.headers;
 	token,session = request.headers.get("Cookie").split(' ');
 	tokenName, tokenValue = token.split('=');
@@ -122,33 +121,45 @@ def veryFirstConnect():
 		printUserStatus(user,'newConnection - /veryFirstConnection');
 		email = user.email;
 		cursor = connectDB();
-		cursor.execute("select * from USER where email='"+email+"'");
+		cursor.execute("select attendOrNot from USER where email='"+email+"'");
 		userTableData = cursor.fetchone();
 		cursor.execute("select * from BOOKLIST_READ where userID='"+email+"'");
 		readTableData = cursor.fetchone();
 		cursor.execute("select * from BOOKLIST_WISH where userID='"+email+"'");
 		wishTableData = cursor.fetchone();
-		if userTableData is None:
-			return "initProfile";
-		elif (readTableData is None) and (wishTableData is None):
-			return "setBookFirst";
+		if userTableData[0] is None:
+			return "InitProfile";
+		elif (readTableData[0] is None) and (wishTableData[0] is None):
+			return "SetBookFirst";
 		else:
-			return "recommend"
+			return "Recommend"
 	else:
-		return "login";
+		return "Login";
 
 @app.route("/login", methods=["POST"])
 def login():
-	time.sleep(5);
+	#time.sleep(5);
 	email = request.form.get('email');
 	password = request.form.get('password'); 
 	cursor = connectDB();
 	user = User.getUserFromDB(cursor,email);
 	if user!=None and user.password == password:
 		login_user(user,remember = True,force = False);
-		return "YES";
+		cursor = connectDB();
+		cursor.execute("select attendOrNot from USER where email='"+email+"'");
+		userTableData = cursor.fetchone();
+		cursor.execute("select * from BOOKLIST_READ where userID='"+email+"'");
+		readTableData = cursor.fetchone();
+		cursor.execute("select * from BOOKLIST_WISH where userID='"+email+"'");
+		wishTableData = cursor.fetchone();
+		if userTableData[0] is None:
+			return "InitProfile";
+		elif (readTableData[0] is None) and (wishTableData[0] is None):
+			return "SetBookFirst";
+		else:
+			return "Recommend"
 	else:
-		return "NO";
+		return "Login";
 
 
 @app.route("/test", methods=["GET", "POST"])
@@ -157,5 +168,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='0.0.0.0', port=5009);
+	app.run(debug=True, host='10.73.45.83', port=5009);
 

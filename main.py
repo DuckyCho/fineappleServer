@@ -5,9 +5,10 @@ sys.setdefaultencoding("utf-8")
 from flask import Flask;
 from flaskext.mysql import MySQL;
 from flask import request, session;
-from flaskext.flask_login import LoginManager, login_user, UserMixin, make_secure_token;
-from flaskext.flask_itsdangerous import URLSafeTimedSerializer;
+from flask_login import LoginManager, login_user, UserMixin, make_secure_token;
+from itsdangerous import URLSafeTimedSerializer;
 import datetime
+import time
 
 app = Flask(__name__);
 
@@ -16,9 +17,9 @@ app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'user';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'password';
-app.config['MYSQL_DATABASE_DB'] = 'dbname';
+app.config['MYSQL_DATABASE_USER'] = 'secret';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'secret';
+app.config['MYSQL_DATABASE_DB'] = 'secret';
 
 login_manager.init_app(app);
 mysql.init_app(app);
@@ -85,7 +86,7 @@ def load_user(email):
 
 @login_manager.token_loader
 def load_token(token):
-	print token;
+	print "rememberToken : %s"%token;
 	cursor = connectDB();
 	data = login_serializer.loads(token);
 	user = User.getUserFromDB(cursor,data[0]);
@@ -99,48 +100,66 @@ def load_token(token):
 		return None;
 
 def printUserStatus(user,comment):
-	print 'userEmail : '#+user.email;
-	print 'userLoginDate : '#+user.loginDate;
-	print 'comment : '#+comment;
+	print "****comment : %s" %comment;
+	print "****userEmail : %s" %user.email;
+	print "****userLoginDate : %s" %user.loginDate;
 
 
 
 #Application Module
 
 @app.route("/veryFirstConnect", methods=["POST"])
-def veryFirstConnect(): 
-	user = login_manager.token_loader(load_token);
+def veryFirstConnect():
+	#time.sleep(5);
+	print request.headers;
+	token,session = request.headers.get("Cookie").split(' ');
+	tokenName, tokenValue = token.split('=');
+	sessionName, sessionValue = session.split('=');
+	tokenValue = tokenValue.replace(';','');
+	user = load_token(tokenValue);
 	if user != None:
 		printUserStatus(user,'newConnection - /veryFirstConnection');
 		email = user.email;
 		cursor = connectDB();
-		cursor.execute("select * from USER where email='"+email+"'");
+		cursor.execute("select attendOrNot from USER where email='"+email+"'");
 		userTableData = cursor.fetchone();
 		cursor.execute("select * from BOOKLIST_READ where userID='"+email+"'");
 		readTableData = cursor.fetchone();
 		cursor.execute("select * from BOOKLIST_WISH where userID='"+email+"'");
 		wishTableData = cursor.fetchone();
-
-		if not userTableData[3]:
-			return "setProfile";
-		elif (not readTableData[0]) and (not wishTableData[0]):
-			return "setBookFirst";
+		if userTableData[0] is None:
+			return "InitProfile";
+		elif (readTableData[0] is None) and (wishTableData[0] is None):
+			return "SetBookFirst";
 		else:
-			return "recommend"
+			return "Recommend"
 	else:
-		return "curPage=login";
+		return "Login";
 
 @app.route("/login", methods=["POST"])
 def login():
+	#time.sleep(5);
 	email = request.form.get('email');
 	password = request.form.get('password'); 
 	cursor = connectDB();
 	user = User.getUserFromDB(cursor,email);
 	if user!=None and user.password == password:
 		login_user(user,remember = True,force = False);
-		return "YES";
+		cursor = connectDB();
+		cursor.execute("select attendOrNot from USER where email='"+email+"'");
+		userTableData = cursor.fetchone();
+		cursor.execute("select * from BOOKLIST_READ where userID='"+email+"'");
+		readTableData = cursor.fetchone();
+		cursor.execute("select * from BOOKLIST_WISH where userID='"+email+"'");
+		wishTableData = cursor.fetchone();
+		if userTableData[0] is None:
+			return "InitProfile";
+		elif (readTableData[0] is None) and (wishTableData[0] is None):
+			return "SetBookFirst";
+		else:
+			return "Recommend"
 	else:
-		return "NO";
+		return "Login";
 
 
 @app.route("/test", methods=["GET", "POST"])
@@ -149,5 +168,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='0.0.0.0', port=5009);
+	app.run(debug=True, host='10.73.45.83', port=5009);
 

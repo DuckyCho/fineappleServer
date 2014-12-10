@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `finedb`.`BOOKINFO` (
   `author` VARCHAR(20) NULL,
   `publisher` VARCHAR(20) NULL,
   `publish_year` TINYINT(4) NULL,
-  `ISBN` TINYINT(13) NOT NULL,
+  `ISBN` VARCHAR(13) NOT NULL,
   `location1` VARCHAR(5) NULL,
   `location2` VARCHAR(10) NULL,
   `large_ctag` VARCHAR(45) NULL,

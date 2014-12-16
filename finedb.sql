@@ -55,24 +55,37 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `finedb`.`ISBN_PREFER`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `finedb`.`ISBN_PREFER` (
+  `bookISBN` VARCHAR(13) NOT NULL,
+  `READ_count` INT NOT NULL DEFAULT 1,
+  `WISH_count` INT NOT NULL DEFAULT 1,
+  PRIMARY KEY (`bookISBN`),
+  INDEX `ISBN_PREFER_idx` (`WISH_count`,`READ_count` DESC)
+)
+ENGINE = InnoDB;
+
+
+
+-- -----------------------------------------------------
 -- Table `finedb`.`BOOKLIST_READ`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `finedb`.`BOOKLIST_READ` (
   `USER_email` VARCHAR(45) NOT NULL,
-  `bookInfoInNext_book_num` CHAR(5) NOT NULL,
-  INDEX `fk_BOOKLIST_READ_USER_idx` (`USER_email` ASC),
-  INDEX `fk_BOOKLIST_READ_bookInfoInNext1_idx` (`bookInfoInNext_book_num` ASC),
+  `bookISBN` VARCHAR(13) NOT NULL,
   CONSTRAINT `fk_BOOKLIST_READ_USER`
     FOREIGN KEY (`USER_email`)
     REFERENCES `finedb`.`USER` (`email`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_BOOKLIST_READ_bookInfoInNext1`
-    FOREIGN KEY (`bookInfoInNext_book_num`)
-    REFERENCES `finedb`.`BOOKINFO` (`book_num`)
+  CONSTRAINT `fk_BOOKLIST_READ_ISBN_PREFER`
+    FOREIGN KEY (`bookISBN`)
+    REFERENCES `finedb`.`ISBN_PREFER` (`bookISBN`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
+
 
 
 -- -----------------------------------------------------
@@ -80,17 +93,15 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `finedb`.`BOOKLIST_WISH` (
   `USER_email` VARCHAR(45) NOT NULL,
-  `bookInfoInNext_book_num` CHAR(5) NOT NULL,
-  INDEX `fk_BOOKLIST_WISH_USER1_idx` (`USER_email` ASC),
-  INDEX `fk_BOOKLIST_WISH_bookInfoInNext1_idx` (`bookInfoInNext_book_num` ASC),
-  CONSTRAINT `fk_BOOKLIST_WISH_USER1`
+  `bookISBN` CHAR(13) NOT NULL,
+  CONSTRAINT `fk_BOOKLIST_WISH_USER`
     FOREIGN KEY (`USER_email`)
     REFERENCES `finedb`.`USER` (`email`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_BOOKLIST_WISH_bookInfoInNext1`
-    FOREIGN KEY (`bookInfoInNext_book_num`)
-    REFERENCES `finedb`.`BOOKINFO` (`book_num`)
+  CONSTRAINT `fk_BOOKLIST_WISH_ISBN_PREFER`
+    FOREIGN KEY (`bookISBN`)
+    REFERENCES `finedb`.`ISBN_PREFER` (`bookISBN`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -104,6 +115,7 @@ CREATE TABLE IF NOT EXISTS `finedb`.`POST` (
   `post` TEXT NULL,
   `postImg` VARCHAR(45) NULL,
   `USER_email` VARCHAR(45) NOT NULL,
+  `postISBN` VARCHAR(13),
   PRIMARY KEY (`postId`),
   INDEX `fk_POST_USER1_idx` (`USER_email` ASC),
   CONSTRAINT `fk_POST_USER1`

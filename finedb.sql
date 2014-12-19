@@ -116,6 +116,9 @@ CREATE TABLE IF NOT EXISTS `finedb`.`POST` (
   `postImg` VARCHAR(45) NULL,
   `USER_email` VARCHAR(45) NOT NULL,
   `postISBN` VARCHAR(13),
+  `likeCount` INT NOT NULL DEFAULT 0,
+  `scrapCount` INT NOT NULL DEFAULT 0,
+  `commentCount` INT NOT NULL DEFAULT 0,
   PRIMARY KEY (`postId`),
   INDEX `fk_POST_USER1_idx` (`USER_email` ASC),
   CONSTRAINT `fk_POST_USER1`

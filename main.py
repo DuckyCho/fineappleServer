@@ -5,11 +5,12 @@ sys.setdefaultencoding("utf-8")
 from flask import Flask;
 from flaskext.mysql import MySQL;
 from flask import request, session;
+from flask import jsonify;
 from flask_login import LoginManager, login_user, UserMixin, make_secure_token;
 from itsdangerous import URLSafeTimedSerializer;
 import datetime
 import time
-
+import json
 app = Flask(__name__);
 
 #초기 설정
@@ -18,7 +19,7 @@ login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
 app.config['MYSQL_DATABASE_USER'] = 'secret';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'secret';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
 app.config['MYSQL_DATABASE_DB'] = 'secret';
 
 login_manager.init_app(app);
@@ -45,7 +46,6 @@ class User(UserMixin):
 	def __init__(self, email, password):
 		self.email = email.encode('utf8');
 		self.password = password;
-		
 		if email == "":
 			self.anonymous = True;
 		else:
@@ -110,7 +110,7 @@ def printUserStatus(user,comment):
 
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect():
-	#time.sleep(5);
+	#time.sleep(8);
 	print request.headers;
 	token,session = request.headers.get("Cookie").split(' ');
 	tokenName, tokenValue = token.split('=');
@@ -161,6 +161,50 @@ def login():
 	else:
 		return "LoginFail";
 
+@app.route("/timeline",methods=["GET"])
+def timeline():
+	#token,session = request.headers.get("Cookie").split(' ');
+	#tokenName, tokenValue = token.split('=');
+	#sessionName, sessionValue = session.split('=');
+	#tokenValue = tokenValue.replace(';','');
+	#user = load_token(tokenValue);
+	#email = user.email;
+	
+	cursor = connectDB();
+	cursor_new = connectDB();
+	cursor_new2 = connectDB();
+	cursor.execute("select * from POST join USER on POST.USER_email=USER.email join BOOKINFO on POST.postISBN = BOOKINFO.ISBN order by postId desc limit 30");
+	dataFromDB = cursor.fetchall();
+	dataArr = [];
+	dataDict = {};
+	keys = ['name','like','scrap','comment','bookTitle','postImg','post','comment1userName','comment1','comment2UserName','comment2','postId'];
+	for postRow in dataFromDB:
+		dataDict[keys[0]]=postRow[10];
+		dataDict[keys[1]]=postRow[5];
+		dataDict[keys[2]]=postRow[6];
+		dataDict[keys[3]]=postRow[7];
+		dataDict[keys[4]]=postRow[16];
+		dataDict[keys[5]]=postRow[2];
+		dataDict[keys[6]]=postRow[1];
+		dataDict[keys[7]]='\N';
+		dataDict[keys[8]]='\N';
+		dataDict[keys[9]]='\N';
+		dataDict[keys[10]]='\N';
+		dataDict[keys[11]]=postRow[0];
+		cursor_new.execute("select * from COMMENT where POST_postId='"+str(postRow[0])+"'");
+		commentRow = cursor_new.fetchmany(2);
+		j = 0;
+		while j < 2 and j < len(commentRow):
+			cursor_new2.execute("select userName from USER where email='"+commentRow[j][3]+"'");
+			commentUserName = cursor_new2.fetchone();
+			dataDict[keys[7+2*j]] = commentUserName;
+			dataDict[keys[8+2*j]] = commentRow[j][1];
+			j += 1;
+		
+		dataArr.append(dataDict);
+		dataDict = dict();
+	
+	return json.dumps(dataArr);
 
 @app.route("/test", methods=["GET", "POST"])
 def test():
@@ -168,5 +212,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='10.73.45.83', port=5013);
+	app.run(debug=True, host='0.0.0.0', port=5013);
 

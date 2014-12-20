@@ -167,11 +167,11 @@ def timeline():
 	cursor = connectDB();
 	cursor_new = connectDB();
 	cursor_new2 = connectDB();
-	cursor.execute("select * from POST join USER on POST.USER_email=USER.email join BOOKINFO on POST.postISBN = BOOKINFO.ISBN order by postId desc limit 30");
+	cursor.execute("select * from POST join USER on POST.USER_email=USER.email left join (select * from BOOKINFO group by ISBN) as BI on POST.postISBN = BI.ISBN order by postId desc limit 30;");
 	dataFromDB = cursor.fetchall();
 	dataArr = [];
 	dataDict = {};
-	keys = ['name','like','scrap','comment','bookTitle','postImg','post','comment1userName','comment1','postId'];
+	keys = ['name','like','scrap','comment','bookTitle','postImg','post','comment1userName','comment1','postId','ISBN'];
 	for postRow in dataFromDB:
 		dataDict[keys[0]]=postRow[10];
 		dataDict[keys[1]]=postRow[5];
@@ -183,6 +183,7 @@ def timeline():
 		dataDict[keys[7]]='\N';
 		dataDict[keys[8]]='\N';
 		dataDict[keys[9]]=postRow[0];
+		dataDict[keys[10]]=postRow[4];
 		cursor_new.execute("select * from COMMENT where POST_postId='"+str(postRow[0])+"'");
 		commentRow = cursor_new.fetchmany(1);
 		j = 0;
@@ -192,7 +193,6 @@ def timeline():
 			dataDict[keys[7]] = commentUserName;
 			dataDict[keys[8]] = commentRow[j][1];
 			j += 1;
-		
 		dataArr.append(dataDict);
 		dataDict = dict();
 	

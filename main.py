@@ -161,15 +161,9 @@ def login():
 	else:
 		return "LoginFail";
 
-@app.route("/timeline",methods=["GET"])
+@app.route("/timeline",methods=["GET","POST"])
 def timeline():
-	#token,session = request.headers.get("Cookie").split(' ');
-	#tokenName, tokenValue = token.split('=');
-	#sessionName, sessionValue = session.split('=');
-	#tokenValue = tokenValue.replace(';','');
-	#user = load_token(tokenValue);
-	#email = user.email;
-	
+	print request.headers;
 	cursor = connectDB();
 	cursor_new = connectDB();
 	cursor_new2 = connectDB();
@@ -177,7 +171,7 @@ def timeline():
 	dataFromDB = cursor.fetchall();
 	dataArr = [];
 	dataDict = {};
-	keys = ['name','like','scrap','comment','bookTitle','postImg','post','comment1userName','comment1','comment2UserName','comment2','postId'];
+	keys = ['name','like','scrap','comment','bookTitle','postImg','post','comment1userName','comment1','postId'];
 	for postRow in dataFromDB:
 		dataDict[keys[0]]=postRow[10];
 		dataDict[keys[1]]=postRow[5];
@@ -188,17 +182,15 @@ def timeline():
 		dataDict[keys[6]]=postRow[1];
 		dataDict[keys[7]]='\N';
 		dataDict[keys[8]]='\N';
-		dataDict[keys[9]]='\N';
-		dataDict[keys[10]]='\N';
-		dataDict[keys[11]]=postRow[0];
+		dataDict[keys[9]]=postRow[0];
 		cursor_new.execute("select * from COMMENT where POST_postId='"+str(postRow[0])+"'");
-		commentRow = cursor_new.fetchmany(2);
+		commentRow = cursor_new.fetchmany(1);
 		j = 0;
-		while j < 2 and j < len(commentRow):
+		while j < 1 and j < len(commentRow):
 			cursor_new2.execute("select userName from USER where email='"+commentRow[j][3]+"'");
 			commentUserName = cursor_new2.fetchone();
-			dataDict[keys[7+2*j]] = commentUserName;
-			dataDict[keys[8+2*j]] = commentRow[j][1];
+			dataDict[keys[7]] = commentUserName;
+			dataDict[keys[8]] = commentRow[j][1];
 			j += 1;
 		
 		dataArr.append(dataDict);

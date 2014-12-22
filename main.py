@@ -210,6 +210,63 @@ def check_Email():
 	else:
 		return "exist"
 
+@app.route('/setBookFirst', methods=['POST','GET'])
+
+def setBookFirst():
+
+	USER_email = user.email #맞음?
+
+	cursor = connectDB();
+
+	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
+	#나의 read 에도 wish에도 없다면
+
+	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num='L0004';")
+
+	result = [];
+
+	colums = tuple([d[0] for d in cursor.description])
+
+	for row in cursor:
+		result.append(dict(zip(colums,row)))
+
+	print(result)
+
+	#현재 한글 깨짐 현상 있
+	return json.dumps(result)
+
+
+@app.route('/readBook',methods=['POST','GET'])
+
+def readBook():
+
+	USER_email = user.email
+	bookInfoInNext_book_num = request.form['book_num']
+
+	cursor = connectDB()
+
+	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
+	cursor.execute("insert USER_email, bookInfoInNEXT values \
+		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_READ;")
+	# 넣은 후에 확인한다?
+
+	return 'OK!'
+
+
+
+@app.route('/wishBook', methods=['POST','GET'])
+
+def wishBook():
+
+	USER_email = user.email
+	bookInfoInNext_book_num = request.form['book_num']
+
+	cursor = connectDB();
+	cursor.execute("insert USER_email, bookInfoInNEXT values \
+		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_WISH;")
+
+	return 'OK!'
+
 
 @app.route("/test", methods=["GET", "POST"])
 def test():

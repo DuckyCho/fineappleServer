@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import sys
+
 reload(sys)
 sys.setdefaultencoding("utf-8")
 from flask import Flask;
@@ -12,7 +13,7 @@ import time
 
 app = Flask(__name__);
 
-#초기 설정
+# 초기 설정
 app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
@@ -24,7 +25,7 @@ app.config['MYSQL_DATABASE_DB'] = 'secret';
 login_manager.init_app(app);
 mysql.init_app(app);
 
-#DB관련 함수
+# DB관련 함수
 
 #connectDB
 #	mysql db 에 접근하여 cursor를 리턴한다.
@@ -45,7 +46,7 @@ class User(UserMixin):
 	def __init__(self, email, password):
 		self.email = email.encode('utf8');
 		self.password = password;
-		
+
 		if email == "":
 			self.anonymous = True;
 		else:
@@ -56,22 +57,27 @@ class User(UserMixin):
 
 	def is_active(self):
 		return self.active;
+
 	def is_authenticated(self):
 		return self.authenticate;
+
 	def is_anonymous(self):
 		return self.anonymous;
+
 	def get_id(self):
 		return self.email;
+
 	def get_auth_token(self):
-		userToken = [self.email,self.password];
+		userToken = [self.email, self.password];
 		data = login_serializer.dumps(userToken);
 		return data;
+
 	@staticmethod
-	def getUserFromDB(cursor,email):
-		cursor.execute("select * from USER where email='"+email+"'");
+	def getUserFromDB(cursor, email):
+		cursor.execute("select * from USER where email='" + email + "'");
 		data = cursor.fetchone();
 		if data != None:
-			user = User(email,data[1]);
+			user = User(email, data[1]);
 			user.active = True;
 			user.authenticate = True;
 			user.anonymous = False;
@@ -79,17 +85,19 @@ class User(UserMixin):
 		else:
 			return None;
 
+
 @login_manager.user_loader
 def load_user(email):
 	cursor = connectDB();
-	return User.getUserFromDB(cursor,email);
+	return User.getUserFromDB(cursor, email);
+
 
 @login_manager.token_loader
 def load_token(token):
-	print "rememberToken : %s"%token;
+	print "rememberToken : %s" % token;
 	cursor = connectDB();
 	data = login_serializer.loads(token);
-	user = User.getUserFromDB(cursor,data[0]);
+	user = User.getUserFromDB(cursor, data[0]);
 
 	if user != None and data[1] == user.password:
 		user.active = True;
@@ -99,11 +107,11 @@ def load_token(token):
 	else:
 		return None;
 
-def printUserStatus(user,comment):
-	print "****comment : %s" %comment;
-	print "****userEmail : %s" %user.email;
-	print "****userLoginDate : %s" %user.loginDate;
 
+def printUserStatus(user, comment):
+	print "****comment : %s" % comment;
+	print "****userEmail : %s" % user.email;
+	print "****userLoginDate : %s" % user.loginDate;
 
 
 #Application Module
@@ -112,20 +120,20 @@ def printUserStatus(user,comment):
 def veryFirstConnect():
 	#time.sleep(5);
 	print request.headers;
-	token,session = request.headers.get("Cookie").split(' ');
+	token, session = request.headers.get("Cookie").split(' ');
 	tokenName, tokenValue = token.split('=');
 	sessionName, sessionValue = session.split('=');
-	tokenValue = tokenValue.replace(';','');
+	tokenValue = tokenValue.replace(';', '');
 	user = load_token(tokenValue);
 	if user != None:
-		printUserStatus(user,'newConnection - /veryFirstConnection');
+		printUserStatus(user, 'newConnection - /veryFirstConnection');
 		email = user.email;
 		cursor = connectDB();
-		cursor.execute("select attendOrNot from USER where email='"+email+"'");
+		cursor.execute("select attendOrNot from USER where email='" + email + "'");
 		userTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_READ where USER_email='"+email+"'");
+		cursor.execute("select * from BOOKLIST_READ where USER_email='" + email + "'");
 		readTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_WISH where USER_email='"+email+"'");
+		cursor.execute("select * from BOOKLIST_WISH where USER_email='" + email + "'");
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
@@ -136,21 +144,22 @@ def veryFirstConnect():
 	else:
 		return "Login";
 
+
 @app.route("/login", methods=["POST"])
 def login():
 	#time.sleep(5);
 	email = request.form.get('email');
-	password = request.form.get('password'); 
+	password = request.form.get('password');
 	cursor = connectDB();
-	user = User.getUserFromDB(cursor,email);
-	if user!=None and user.password == password:
-		login_user(user,remember = True,force = False);
+	user = User.getUserFromDB(cursor, email);
+	if user != None and user.password == password:
+		login_user(user, remember=True, force=False);
 		cursor = connectDB();
-		cursor.execute("select attendOrNot from USER where email='"+email+"'");
+		cursor.execute("select attendOrNot from USER where email='" + email + "'");
 		userTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_READ where USER_email='"+email+"'");
+		cursor.execute("select * from BOOKLIST_READ where USER_email='" + email + "'");
 		readTableData = cursor.fetchone();
-		cursor.execute("select * from BOOKLIST_WISH where USER_email='"+email+"'");
+		cursor.execute("select * from BOOKLIST_WISH where USER_email='" + email + "'");
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
@@ -160,6 +169,47 @@ def login():
 			return "Recommend"
 	else:
 		return "LoginFail";
+
+
+#register
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+	if request.method == 'POST':
+		email = request.form['email']
+		password = request.form['password']
+		name = request.form['userName']
+
+		con = mysql.connect()
+		cursor = con.cursor()
+
+		query = "insert into USER \
+        	(email, password, userName) values \
+        	('" + email + "', '" + password + "', '" + name + "');"
+
+		cursor.execute(query)
+		con.commit()
+
+		print("success!")
+	return "OK! Query"
+	
+return "Error"
+
+
+@app.route('/register/email', methods=['POST'])
+def check_Email():
+	email = request.form['email']
+
+	con = mysql.connect()
+	cursor = con.cursor()
+
+	cursor.execute("select * from USER where email='" + email + "'")
+	check_e = cursor.fetchone()
+
+	if check_e is None:
+		print("None")
+		return "None"
+	else:
+		return "exist"
 
 
 @app.route("/test", methods=["GET", "POST"])

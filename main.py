@@ -14,13 +14,12 @@ import time
 app = Flask(__name__);
 
 # 초기 설정
-app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'secret';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'secret';
-app.config['MYSQL_DATABASE_DB'] = 'secret';
+app.config['MYSQL_DATABASE_USER'] = 'root';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'next!!@@##$$';
+app.config['MYSQL_DATABASE_DB'] = 'finedb';
 
 login_manager.init_app(app);
 mysql.init_app(app);
@@ -190,9 +189,9 @@ def register():
 		con.commit()
 
 		print("success!")
-	return "OK! Query"
+		return "OK! Query"
 	
-return "Error"
+	return "Error"
 
 
 @app.route('/register/email', methods=['POST'])

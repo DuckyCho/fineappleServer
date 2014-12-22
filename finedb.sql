@@ -22,16 +22,16 @@ USE `finedb` ;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `finedb`.`BOOKINFO` (
   `book_num` CHAR(5) NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
-  `author` VARCHAR(20) NULL,
-  `publisher` VARCHAR(20) NULL,
+  `name` VARCHAR(200) NOT NULL,
+  `author` VARCHAR(200) NULL,
+  `publisher` VARCHAR(200) NULL,
   `publish_year` TINYINT(4) NULL,
   `ISBN` VARCHAR(13) NOT NULL,
-  `location1` VARCHAR(5) NULL,
-  `location2` VARCHAR(10) NULL,
-  `large_ctag` VARCHAR(45) NULL,
-  `medium_ctag` VARCHAR(45) NULL,
-  `small_ctag` VARCHAR(45) NULL,
+  `location1` VARCHAR(10) NULL,
+  `location2` VARCHAR(100) NULL,
+  `large_ctag` VARCHAR(100) NULL,
+  `medium_ctag` VARCHAR(100) NULL,
+  `small_ctag` VARCHAR(100) NULL,
   `cover_img` VARCHAR(200) NULL,
   PRIMARY KEY (`book_num`))
 ENGINE = InnoDB

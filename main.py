@@ -118,7 +118,6 @@ def printUserStatus(user, comment):
 
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect():
-	#time.sleep(5);
 	print request.headers;
 	token, session = request.headers.get("Cookie").split(' ');
 	tokenName, tokenValue = token.split('=');
@@ -137,7 +136,7 @@ def veryFirstConnect():
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
-		elif (readTableData[0] is None) and (wishTableData[0] is None):
+		elif (readTableData is None) and (wishTableData is None):
 			return "SetBookFirst";
 		else:
 			return "Recommend"
@@ -147,7 +146,6 @@ def veryFirstConnect():
 
 @app.route("/login", methods=["POST"])
 def login():
-	#time.sleep(5);
 	email = request.form.get('email');
 	password = request.form.get('password');
 	cursor = connectDB();
@@ -163,12 +161,32 @@ def login():
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
-		elif (readTableData[0] is None) and (wishTableData[0] is None):
+		elif (readTableData is None) and (wishTableData is None):
 			return "SetBookFirst";
 		else:
 			return "Recommend"
 	else:
 		return "LoginFail";
+
+
+#initProfile
+@app.route("/initProfile", methods=["POST"])
+def initProfile():
+	print request.headers
+	tokenName,token = request.headers.get("Cookie").split("=");
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	user = load_token(token);
+	email = user.email;
+	attendOrNot = request.form.get('attendOrNot');
+	semesterNum = request.form.get('semesterNum');
+	majorFirst = request.form.get('majorFirst');
+	majorSecond = request.form.get('majorSecond');
+	if majorSecond == '\\N':
+		majorSecond = 'DEFAULT';
+	result = cursor.execute("update USER set attendOrNot="+attendOrNot+", semesterNum="+semesterNum+", majorNameFirst="+majorFirst+", majorNameSecond="+majorSecond+" where email='"+email+"'");
+	conn.commit();
+	return str(result);
 
 
 #register

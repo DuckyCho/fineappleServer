@@ -110,7 +110,6 @@ def printUserStatus(user,comment):
 
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect():
-	#time.sleep(8);
 	print request.headers;
 	token,session = request.headers.get("Cookie").split(' ');
 	tokenName, tokenValue = token.split('=');
@@ -129,7 +128,7 @@ def veryFirstConnect():
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
-		elif (readTableData[0] is None) and (wishTableData[0] is None):
+		elif (readTableData is None) and (wishTableData is None):
 			return "SetBookFirst";
 		else:
 			return "Recommend"
@@ -138,7 +137,6 @@ def veryFirstConnect():
 
 @app.route("/login", methods=["POST"])
 def login():
-	#time.sleep(5);
 	email = request.form.get('email');
 	password = request.form.get('password'); 
 	cursor = connectDB();
@@ -154,20 +152,48 @@ def login():
 		wishTableData = cursor.fetchone();
 		if userTableData[0] is None:
 			return "InitProfile";
-		elif (readTableData[0] is None) and (wishTableData[0] is None):
+		elif (readTableData is None) and (wishTableData is None):
 			return "SetBookFirst";
 		else:
 			return "Recommend"
 	else:
 		return "LoginFail";
 
+
+@app.route("/initProfile", methods=["POST"])
+def initProfile():
+	print request.headers
+	tokenName,token = request.headers.get("Cookie").split("=");
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	user = load_token(token);
+	email = user.email;
+	attendOrNot = request.form.get('attendOrNot');
+	semesterNum = request.form.get('semesterNum');
+	majorFirst = request.form.get('majorFirst');
+	majorSecond = request.form.get('majorSecond');
+	if majorSecond == '\\N':
+		majorSecond = 'DEFAULT';
+	result = cursor.execute("update USER set attendOrNot="+attendOrNot+", semesterNum="+semesterNum+", majorNameFirst="+majorFirst+", majorNameSecond="+majorSecond+" where email='"+email+"'");
+	conn.commit();
+	return str(result);
+
+
+
 @app.route("/timeline",methods=["GET","POST"])
 def timeline():
+	count = request.headers.get("Count");
+	count = count.replace(';','');
+	if(int(count) == -1):
+		cursor_count = connectDB();
+		cursor_count.execute("select postId from POST order by postId desc limit 1;");	
+		count = cursor_count.fetchone();
+		count = str(count[0]+1);
 	print request.headers;
 	cursor = connectDB();
 	cursor_new = connectDB();
 	cursor_new2 = connectDB();
-	cursor.execute("select * from POST join USER on POST.USER_email=USER.email left join (select * from BOOKINFO group by ISBN) as BI on POST.postISBN = BI.ISBN order by postId desc limit 30;");
+	cursor.execute("select * from POST join USER on POST.USER_email=USER.email left join (select * from BOOKINFO group by ISBN) as BI on POST.postISBN = BI.ISBN where postId<"+count+" order by postId desc limit 30;");
 	dataFromDB = cursor.fetchall();
 	dataArr = [];
 	dataDict = {};
@@ -190,12 +216,58 @@ def timeline():
 		while j < 1 and j < len(commentRow):
 			cursor_new2.execute("select userName from USER where email='"+commentRow[j][3]+"'");
 			commentUserName = cursor_new2.fetchone();
-			dataDict[keys[7]] = commentUserName;
+			dataDict[keys[7]] = commentUserName[0];
 			dataDict[keys[8]] = commentRow[j][1];
 			j += 1;
 		dataArr.append(dataDict);
 		dataDict = dict();
-	
+	return json.dumps(dataArr);
+
+@app.route("/mypost",methods=["GET","POST"])
+def mypost():
+	count = request.headers.get("Count");
+	count = count.replace(';','');
+	print count
+	if(int(count) == -1):
+		cursor_count = connectDB();
+		cursor_count.execute("select postId from POST order by postId desc limit 1;");	
+		count = cursor_count.fetchone();
+		count = str(count[0]+1);
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
+	print request.headers;
+	cursor = connectDB();
+	cursor_new = connectDB();
+	cursor_new2 = connectDB();
+	cursor.execute("select * from POST join USER on POST.USER_email=USER.email left join (select * from BOOKINFO group by ISBN) as BI on POST.postISBN = BI.ISBN where postId<"+count+" && USER_email='"+email+"' order by postId desc limit 30;");
+	dataFromDB = cursor.fetchall();
+	dataArr = [];
+	dataDict = {};
+	keys = ['name','like','scrap','comment','bookTitle','postImg','post','comment1userName','comment1','postId','ISBN'];
+	for postRow in dataFromDB:
+		dataDict[keys[0]]=postRow[10];
+		dataDict[keys[1]]=postRow[5];
+		dataDict[keys[2]]=postRow[6];
+		dataDict[keys[3]]=postRow[7];
+		dataDict[keys[4]]=postRow[16];
+		dataDict[keys[5]]=postRow[2];
+		dataDict[keys[6]]=postRow[1];
+		dataDict[keys[7]]='\N';
+		dataDict[keys[8]]='\N';
+		dataDict[keys[9]]=postRow[0];
+		dataDict[keys[10]]=postRow[4];
+		cursor_new.execute("select * from COMMENT where POST_postId='"+str(postRow[0])+"'");
+		commentRow = cursor_new.fetchmany(1);
+		j = 0;
+		while j < 1 and j < len(commentRow):
+			cursor_new2.execute("select userName from USER where email='"+commentRow[j][3]+"'");
+			commentUserName = cursor_new2.fetchone();
+			dataDict[keys[7]] = commentUserName[0];
+			dataDict[keys[8]] = commentRow[j][1];
+			j += 1;
+		dataArr.append(dataDict);
+		dataDict = dict();
 	return json.dumps(dataArr);
 
 @app.route("/test", methods=["GET", "POST"])

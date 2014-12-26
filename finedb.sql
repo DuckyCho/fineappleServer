@@ -111,7 +111,7 @@ ENGINE = InnoDB;
 -- Table `finedb`.`POST`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `finedb`.`POST` (
-  `postId` INT NOT NULL,
+  `postId` INT NOT NULL AUTO_INCREMENT,
   `post` TEXT NULL,
   `postImg` VARCHAR(45) NULL,
   `USER_email` VARCHAR(45) NOT NULL,
@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS `finedb`.`LIKE` (
   `USER_email` VARCHAR(45) NOT NULL,
   INDEX `fk_LIKE_POST1_idx` (`POST_postId` ASC),
   INDEX `fk_LIKE_USER1_idx` (`USER_email` ASC),
+  PRIMARY KEY (`POST_postId`,`USER_email`),
   CONSTRAINT `fk_LIKE_POST1`
     FOREIGN KEY (`POST_postId`)
     REFERENCES `finedb`.`POST` (`postId`)

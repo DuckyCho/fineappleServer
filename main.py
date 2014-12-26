@@ -35,6 +35,45 @@ def connectDB():
 	cursor = mysql.connect().cursor();
 	return cursor;
 
+def newLikeScrap(tableName,columnName,postId,email):
+	if tableName == "SCRAP":
+		cursor_tmp = connectDB();
+		cursor_tmp.execute("select USER_email from POST where postId="+postId+";");
+		postAuthor = cursor_tmp.fetchone();
+		postAuthor = postAuthor[0];
+		if postAuthor == email:
+			return;
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	queryToPostTable = "update POST set "+columnName+" = "+columnName+" + 1 where postId="+postId+";";
+	queryToDefinedTable = "insert into `"+tableName+"` values("+postId+",'"+email+"');";
+	print queryToPostTable;
+	print queryToDefinedTable;
+	cursor.execute(queryToPostTable);
+	conn.commit();
+	cursor.execute(queryToDefinedTable);
+	conn.commit();
+
+def removeLikeScrap(tableName,columnName,postId,email):
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	queryToPostTable = "update POST set "+columnName+" = "+columnName+" - 1 where postId="+postId+";";
+	queryToDefinedTable = "delete from `"+tableName+"` where POST_postId="+postId+" and USER_email='"+email+"';";
+	print queryToPostTable;
+	print queryToDefinedTable;
+	cursor.execute(queryToPostTable);
+	conn.commit();
+	cursor.execute(queryToDefinedTable);
+	conn.commit();
+
+def newCommentOnPost(postId,email,comment):
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	queryToPostTable = "update POST set commentCount = commentCount + 1 where postId="+postId+";";
+	queryToCommentTable = "insert into COMMENT (comment,POST_postId,USER_email) values('"+comment+"',"+postId+",'"+email+"');";
+	cursor.execute(queryToPostTable);
+	cursor.execute(queryToCommentTable);
+	conn.commit();
 
 #User 클래스와 관련 함수
 class User(UserMixin):
@@ -137,9 +176,9 @@ def veryFirstConnect():
 		if userTableData[0] is None:
 			return "InitProfile";
 		elif (readTableData is None) and (wishTableData is None):
-			return "SetBookFirst";
+			return "MainTab";
 		else:
-			return "Recommend"
+			return "MainTab"
 	else:
 		return "Login";
 
@@ -162,9 +201,9 @@ def login():
 		if userTableData[0] is None:
 			return "InitProfile";
 		elif (readTableData is None) and (wishTableData is None):
-			return "SetBookFirst";
+			return "MainTab";
 		else:
-			return "Recommend"
+			return "MainTab"
 	else:
 		return "LoginFail";
 
@@ -210,9 +249,9 @@ def register():
 		con.commit()
 
 		print("success!")
-	return "OK! Query"
+		return "OK! Query"
 	
-return "Error"
+	return "Error"
 
 
 @app.route('/register/email', methods=['POST'])
@@ -269,7 +308,7 @@ def readBook():
 
 	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
 	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_READ;")
+		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
 	# 넣은 후에 확인한다?
 
 	return 'OK!'
@@ -285,7 +324,7 @@ def wishBook():
 
 	cursor = connectDB();
 	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_WISH;")
+		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
 
 	return 'OK!'
 
@@ -334,6 +373,21 @@ def timeline():
 		dataDict = dict();
 	return json.dumps(dataArr);
 
+@app.route("/getMyLikePostInfo",methods=["POST"])
+def getMyLikePostInfo():
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
+	cursor = connectDB();
+	cursor.execute("select * from `LIKE` where USER_email='"+email+"';");
+	dataFromDB = cursor.fetchall();
+	dataDict = {};
+	for row in dataFromDB:
+		dataDict[row[0]] = "IN";
+
+	return json.dumps(dataDict);
+
+
 @app.route("/mypost",methods=["GET","POST"])
 def mypost():
 	count = request.headers.get("Count");
@@ -379,8 +433,85 @@ def mypost():
 			j += 1;
 		dataArr.append(dataDict);
 		dataDict = dict();
+	
+	cursor.execute("select * from SCRAP where USER_email='"+email+"' && POST_postId<"+count+";");
+	dataFromDB = cursor.fetchall();
+	for row in dataFromDB:
+		dataDict = dict();
+		postId = str(row[0]);
+		cursor.execute("select * from POST where postId="+postId+";");
+		postData = cursor.fetchone();
+		post = postData[1];
+		postImg = postData[2];
+		ISBN = postData[4];
+		like = postData[5];
+		scrap = postData[6];
+		comment = postData[7];
+		cursor.execute("select name from BOOKINFO where ISBN='"+ISBN+"';");
+		bookTitle = cursor.fetchone();
+		if bookTitle != None:
+			bookTitle = str(bookTitle[0]);
+		cursor.execute("select * from USER where email='"+email+"';");
+		userData = cursor.fetchone();
+		name = userData[2];
+		cursor.execute("select * from COMMENT where POST_postId="+postId+";");
+		commentData = cursor.fetchone();
+		if commentData != None:
+			comment1 = commentData[1];
+			cursor.execute("select userName from USER where email='"+commentData[3]+"';");
+			comment1userName = cursor.fetchone();
+			comment1userName = comment1userName[0];
+		else:
+			comment1 = '\N';
+			comment1userName = '\N';
+		dataDict[keys[0]] = name;
+		dataDict[keys[1]] = like;
+		dataDict[keys[2]] = scrap;
+		dataDict[keys[3]] = comment;
+		dataDict[keys[4]] = bookTitle;
+		dataDict[keys[5]] = postImg;
+		dataDict[keys[6]] = post;
+		dataDict[keys[7]] = comment1userName;
+		dataDict[keys[8]] = comment1;
+		dataDict[keys[9]] = postId;
+		dataDict[keys[10]] = ISBN;
+		dataDict['scrapByMe'] = 'yes';
+		dataArr.append(dataDict);
 	return json.dumps(dataArr);
 
+@app.route("/timelineButton", methods=["POST"])
+def timelineButton():
+	print request.headers
+	action = request.form.get('action');
+	buttonType = request.form.get('type');
+	necessaryValue = request.form.get('key');
+	print action
+	print buttonType
+	print necessaryValue
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
+	#if action is 1 == 버튼이 활성화 상태인 경우
+	if int(action) is 1:
+		if buttonType == "like" or buttonType == "scrap":
+			columnName = buttonType+"Count";
+			tableName = buttonType.upper();
+			newLikeScrap(tableName,columnName,necessaryValue,email);
+		else:
+			postId,comment = necessaryValue.split('/');
+			postId = postId[6:];
+			comment = postId[7:];
+			newCommentOnPost(postId,email,comment);
+	#action is 0 == 버튼이 비활성화로 바뀐 경우
+	else:
+		if buttonType == "like" or buttonType == "scrap":
+			columnName = buttonType+"Count";
+			tableName = buttonType.upper();
+			removeLikeScrap(tableName,columnName,necessaryValue,email);
+		
+		print "delete";
+	
+	return "done";
 
 @app.route("/test", methods=["GET", "POST"])
 def test():

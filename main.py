@@ -215,14 +215,12 @@ def check_Email():
 
 def setBookFirst():
 
-	USER_email = user.email #맞음?
-
 	cursor = connectDB();
 
 	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
 	#나의 read 에도 wish에도 없다면
 
-	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num='L0004';")
+	cursor.execute("select name,author,cover_img,book_num from BOOKINFO order by rand() limit 15;")
 
 	result = [];
 

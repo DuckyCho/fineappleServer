@@ -41,8 +41,8 @@ def search(query, **args):
 def getimg(tISBN):
 	info = search(tISBN)
 	for item in info['item']:
-		print item['cover_s_url']
-		return item['cover_s_url']
+		print item['cover_l_url']
+		return item['cover_l_url']
 
 
 def getISBN(bookNum):

@@ -10,6 +10,7 @@ from flask_login import LoginManager, login_user, UserMixin, make_secure_token;
 from itsdangerous import URLSafeTimedSerializer;
 import datetime
 import time
+import json
 
 app = Flask(__name__);
 
@@ -210,18 +211,18 @@ def check_Email():
 	else:
 		return "exist"
 
-@app.route('/setBookFirst', methods=['POST','GET'])
-
+@app.route('/setBookFirst', methods=['GET','POST'])
 def setBookFirst():
 
-	USER_email = user.email #맞음?
-
+	#USER_email = user.email #맞음?
+	print 'error'
 	cursor = connectDB();
-
+	
+	print 'connetctDB'
 	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
 	#나의 read 에도 wish에도 없다면
 
-	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num='L0004';")
+	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num between 'L0001' and 'L0010';")
 
 	result = [];
 
@@ -247,7 +248,7 @@ def readBook():
 
 	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
 	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_READ;")
+		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
 	# 넣은 후에 확인한다?
 
 	return 'OK!'
@@ -263,7 +264,7 @@ def wishBook():
 
 	cursor = connectDB();
 	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_WISH;")
+		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
 
 	return 'OK!'
 
@@ -274,5 +275,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='10.73.45.83', port=5013);
+	app.run(debug=True, host='10.73.45.83', port=5010);
 

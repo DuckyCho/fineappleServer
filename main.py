@@ -262,7 +262,7 @@ def check_Email():
 	con = mysql.connect()
 	cursor = con.cursor()
 
-	cursor.execute("select * from USER where email='" + email + "'")
+	cursor.execute("select * from USER where email='" + email + "';")
 	check_e = cursor.fetchone()
 
 	if check_e is None:
@@ -271,6 +271,31 @@ def check_Email():
 	else:
 		return "exist"
 
+@app.route('/bookDetail', methods=['POST','GET'])
+def book_Detail():
+	book_num = request.form['book_num']
+
+	con = mysql.connect()
+	cursor = con.cursor()
+
+	cursor.execute("select * from BOOKINFO where book_num='" + book_num + "';")
+	result = cursor.fetchone()
+
+	return json.dumps(result)
+
+
+@app.route('/count', methods=['POST'])
+def count():
+	ISBN = request.form['ISBN']
+
+	con = mysql.connect()
+	cursor = con.cursor()
+
+	cursor.execute("select READ_count,WISH_count from ISBN_PREFER where bookISBN='" + ISBN + "';")
+
+	result = cursor.fetchone()
+
+	return json.dumps(result)
 
 @app.route('/setBookFirst', methods=['POST','GET'])
 def setBookFirst():
@@ -514,6 +539,7 @@ def timelineButton():
 		print "delete";
 	
 	return "done";
+
 
 @app.route("/test", methods=["GET", "POST"])
 def test():

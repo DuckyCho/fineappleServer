@@ -280,16 +280,11 @@ def book_Detail():
 
 	cursor.execute("select * from BOOKINFO where book_num='" + book_num + "';")
 
-	result = [];
+	result = cursor.fetchone()
 
-	colums = tuple([d[0] for d in cursor.description])
+	print result
 
-	for row in cursor:
-		result.append(dict(zip(colums,row)))
-
-	print(result)
-
-	return json.dumps(result)
+	return result
 
 
 @app.route('/count', methods=['POST'])

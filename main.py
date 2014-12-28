@@ -217,10 +217,8 @@ def setBookFirst():
 	cursor = connectDB();
 	
 	print 'connetctDB'
-	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
-	#나의 read 에도 wish에도 없다면
 
-	cursor.execute("select name,author,cover_img,book_num from BOOKINFO order by rand() limit 15;")
+	cursor.execute("select name,author,cover_img,ISBN from BOOKINFO order by rand() limit 15;")
 
 	result = [];
 
@@ -239,14 +237,14 @@ def setBookFirst():
 
 def readBook():
 
-	USER_email = user.email
-	bookInfoInNext_book_num = request.form['book_num']
+	result = request.get_json()
 
-	cursor = connectDB()
+	#bookInfoInNext_book_num = request.form['book_num']
+
+	#cursor = connectDB()
 
 	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
-	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
+	#cursor.execute("insert USER_email, bookISBN values \ '"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
 	# 넣은 후에 확인한다?
 
 	return 'OK!'
@@ -257,12 +255,15 @@ def readBook():
 
 def wishBook():
 
-	USER_email = user.email
+	#USER_email = user.email
+
+	email = request.form['email']
+
 	bookInfoInNext_book_num = request.form['book_num']
 
 	cursor = connectDB();
-	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
+	cursor.execute("insert USER_email, bookISBN values \
+		'"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
 
 	return 'OK!'
 

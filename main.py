@@ -279,7 +279,15 @@ def book_Detail():
 	cursor = con.cursor()
 
 	cursor.execute("select * from BOOKINFO where book_num='" + book_num + "';")
-	result = cursor.fetchone()
+	
+	result = [];
+
+	colums = tuple([d[0] for d in cursor.description])
+
+	for row in cursor:
+		result.append(dict(zip(colums,row)))
+
+	print(result)
 
 	return json.dumps(result)
 

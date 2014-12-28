@@ -218,7 +218,7 @@ def setBookFirst():
 	
 	print 'connetctDB'
 
-	cursor.execute("select name,author,cover_img,ISBN from BOOKINFO order by rand() limit 15;")
+	cursor.execute("select name,author,book_num,cover_img,ISBN from BOOKINFO order by rand() limit 15;")
 
 	result = [];
 

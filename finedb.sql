@@ -111,7 +111,7 @@ ENGINE = InnoDB;
 -- Table `finedb`.`POST`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `finedb`.`POST` (
-  `postId` INT NOT NULL,
+  `postId` INT NOT NULL AUTO_INCREMENT,
   `post` TEXT NULL,
   `postImg` VARCHAR(45) NULL,
   `USER_email` VARCHAR(45) NOT NULL,
@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS `finedb`.`LIKE` (
   `USER_email` VARCHAR(45) NOT NULL,
   INDEX `fk_LIKE_POST1_idx` (`POST_postId` ASC),
   INDEX `fk_LIKE_USER1_idx` (`USER_email` ASC),
+  PRIMARY KEY (`POST_postId`,`USER_email`),
   CONSTRAINT `fk_LIKE_POST1`
     FOREIGN KEY (`POST_postId`)
     REFERENCES `finedb`.`POST` (`postId`)
@@ -149,12 +150,35 @@ CREATE TABLE IF NOT EXISTS `finedb`.`LIKE` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `finedb`.`SCRAP`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS SCRAP;
+CREATE TABLE `finedb`.`SCRAP` (
+  `POST_postId` INT(11) NULL,
+  `USER_email` VARCHAR(45) NULL,
+  INDEX `email_idx` (`USER_email` ASC),
+  INDEX `postId_idx` (`POST_postId` ASC),
+  PRIMARY KEY(POST_postId, USER_email),
+  CONSTRAINT `fk_SCRAP_USER`
+    FOREIGN KEY (`USER_email`)
+    REFERENCES `finedb`.`USER` (`email`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_SCRAP_POST`
+    FOREIGN KEY (`POST_postId`)
+    REFERENCES `finedb`.`POST` (`postId`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION
+    )
+DEFAULT CHARSET=utf8;
+
 
 -- -----------------------------------------------------
 -- Table `finedb`.`COMMENT`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `finedb`.`COMMENT` (
-  `commentId` INT NOT NULL,
+  `commentId` INT NOT NULL AUTO_INCREMENT,
   `comment` TEXT NULL,
   `POST_postId` INT NOT NULL,
   `USER_email` VARCHAR(45) NOT NULL,

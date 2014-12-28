@@ -19,9 +19,9 @@ app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'secret';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
-app.config['MYSQL_DATABASE_DB'] = 'secret';
+app.config['MYSQL_DATABASE_USER'] = 'root';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'next!!@@##$$'
+app.config['MYSQL_DATABASE_DB'] = 'finedb';
 
 
 login_manager.init_app(app);
@@ -279,7 +279,7 @@ def book_Detail():
 	cursor = con.cursor()
 
 	cursor.execute("select * from BOOKINFO where book_num='" + book_num + "';")
-	
+
 	result = [];
 
 	colums = tuple([d[0] for d in cursor.description])
@@ -562,6 +562,6 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='0.0.0.0', port=5013);
+	app.run(debug=True, host='10.73.45.83', port=5010);
 
 

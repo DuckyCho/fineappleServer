@@ -15,6 +15,7 @@ import json
 app = Flask(__name__);
 
 # 초기 설정
+app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);

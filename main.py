@@ -214,15 +214,13 @@ def check_Email():
 @app.route('/setBookFirst', methods=['GET','POST'])
 def setBookFirst():
 
-	#USER_email = user.email #맞음?
-	print 'error'
 	cursor = connectDB();
 	
 	print 'connetctDB'
 	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
 	#나의 read 에도 wish에도 없다면
 
-	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num between 'L0001' and 'L0010';")
+	cursor.execute("select name,author,cover_img,book_num from BOOKINFO order by rand() limit 15;")
 
 	result = [];
 

@@ -15,13 +15,13 @@ import json
 app = Flask(__name__);
 
 # 초기 설정
-app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
 app.config['MYSQL_DATABASE_USER'] = 'secret';
 app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
 app.config['MYSQL_DATABASE_DB'] = 'secret';
+
 
 login_manager.init_app(app);
 mysql.init_app(app);
@@ -210,9 +210,9 @@ def register():
 		con.commit()
 
 		print("success!")
-	return "OK! Query"
+		return "OK! Query"
 	
-return "Error"
+	return "Error"
 
 
 @app.route('/register/email', methods=['POST'])
@@ -233,17 +233,13 @@ def check_Email():
 
 
 @app.route('/setBookFirst', methods=['POST','GET'])
-
 def setBookFirst():
 
-	USER_email = user.email #맞음?
-
 	cursor = connectDB();
+	
+	print 'connetctDB'
 
-	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
-	#나의 read 에도 wish에도 없다면
-
-	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num='L0004';")
+	cursor.execute("select name,author,book_num,cover_img,ISBN from BOOKINFO order by rand() limit 15;")
 
 	result = [];
 
@@ -262,14 +258,14 @@ def setBookFirst():
 
 def readBook():
 
-	USER_email = user.email
-	bookInfoInNext_book_num = request.form['book_num']
+	result = request.get_json()
 
-	cursor = connectDB()
+	#bookInfoInNext_book_num = request.form['book_num']
+
+	#cursor = connectDB()
 
 	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
-	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_READ;")
+	#cursor.execute("insert USER_email, bookISBN values \ '"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
 	# 넣은 후에 확인한다?
 
 	return 'OK!'
@@ -280,12 +276,15 @@ def readBook():
 
 def wishBook():
 
-	USER_email = user.email
+	#USER_email = user.email
+
+	email = request.form['email']
+
 	bookInfoInNext_book_num = request.form['book_num']
 
 	cursor = connectDB();
-	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		+'"USER_email"'+,'"bookInfoInNext_book_num"' from BOOKLIST_WISH;")
+	cursor.execute("insert USER_email, bookISBN values \
+		'"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
 
 	return 'OK!'
 
@@ -389,4 +388,5 @@ def test():
 
 if __name__ == "__main__":
 	app.run(debug=True, host='0.0.0.0', port=5013);
+
 

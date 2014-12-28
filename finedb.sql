@@ -113,7 +113,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `finedb`.`POST` (
   `postId` INT NOT NULL AUTO_INCREMENT,
   `post` TEXT NULL,
-  `postImg` VARCHAR(45) NULL,
+  `postImg` VARCHAR(90) NULL,
   `USER_email` VARCHAR(45) NOT NULL,
   `postISBN` VARCHAR(13),
   `likeCount` INT NOT NULL DEFAULT 0,

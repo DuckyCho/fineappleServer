@@ -23,6 +23,7 @@ app.config['MYSQL_DATABASE_USER'] = 'secret';
 app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
 app.config['MYSQL_DATABASE_DB'] = 'secret';
 
+
 login_manager.init_app(app);
 mysql.init_app(app);
 
@@ -339,6 +340,8 @@ def timeline():
 		cursor_count.execute("select postId from POST order by postId desc limit 1;");	
 		count = cursor_count.fetchone();
 		count = str(count[0]+1);
+		print "count!!!"
+		print count;
 	print request.headers;
 	cursor = connectDB();
 	cursor_new = connectDB();
@@ -511,6 +514,36 @@ def timelineButton():
 		
 		print "delete";
 	
+	return "done";
+
+@app.route("/posting", methods=["POST"])
+def posting():
+	print request.headers
+	print request.data
+	post = request.form.get('post');
+	postImg = request.form.get('postImg');
+	postISBN = request.form.get('postISBN');
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	postid = cursor.execute("select postId from POST order by postId desc");
+	postid = cursor.fetchone();
+	if postid is not None:
+		postid = int(postid[0]) + 1;
+	else:
+		postid = 0;
+	print request.form;
+	print post;
+	print postImg;
+	print postISBN;
+	print email;
+	print postid;
+	query = "insert into POST values("+str(postid)+",'"+post+"','"+postImg+"','"+email+"','"+postISBN+"',0,0,0);";
+	print query;
+	cursor.execute(query);
+	conn.commit();
 	return "done";
 
 @app.route("/test", methods=["GET", "POST"])

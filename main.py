@@ -24,6 +24,7 @@ app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
 app.config['MYSQL_DATABASE_DB'] = 'secret';
 
 
+
 login_manager.init_app(app);
 mysql.init_app(app);
 
@@ -534,14 +535,8 @@ def posting():
 		postid = int(postid[0]) + 1;
 	else:
 		postid = 0;
-	print request.form;
-	print post;
-	print postImg;
-	print postISBN;
-	print email;
-	print postid;
+	
 	query = "insert into POST values("+str(postid)+",'"+post+"','"+postImg+"','"+email+"','"+postISBN+"',0,0,0);";
-	print query;
 	cursor.execute(query);
 	conn.commit();
 	return "done";

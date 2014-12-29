@@ -7,7 +7,7 @@ from flask import Flask;
 from flaskext.mysql import MySQL;
 from flask import request, session;
 from flask import jsonify;
-from flask_login import LoginManager, login_user, UserMixin, make_secure_token;
+from flask_login import LoginManager, login_user, logout_user, UserMixin, make_secure_token;
 from itsdangerous import URLSafeTimedSerializer;
 import datetime
 import time
@@ -75,6 +75,7 @@ def newCommentOnPost(postId,email,comment):
 	queryToPostTable = "update POST set commentCount = commentCount + 1 where postId="+postId+";";
 	queryToCommentTable = "insert into COMMENT (comment,POST_postId,USER_email) values('"+comment+"',"+postId+",'"+email+"');";
 	cursor.execute(queryToPostTable);
+	conn.commit();
 	cursor.execute(queryToCommentTable);
 	conn.commit();
 
@@ -161,11 +162,8 @@ def printUserStatus(user, comment):
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect():
 	print request.headers;
-	token, session = request.headers.get("Cookie").split(' ');
-	tokenName, tokenValue = token.split('=');
-	sessionName, sessionValue = session.split('=');
-	tokenValue = tokenValue.replace(';', '');
-	user = load_token(tokenValue);
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
 	if user != None:
 		printUserStatus(user, 'newConnection - /veryFirstConnection');
 		email = user.email;
@@ -197,10 +195,13 @@ def login():
 		cursor = connectDB();
 		cursor.execute("select attendOrNot from USER where email='" + email + "'");
 		userTableData = cursor.fetchone();
+		print userTableData
 		cursor.execute("select * from BOOKLIST_READ where USER_email='" + email + "'");
 		readTableData = cursor.fetchone();
 		cursor.execute("select * from BOOKLIST_WISH where USER_email='" + email + "'");
 		wishTableData = cursor.fetchone();
+		print "select attendOrNot from USER where email='"     + email + "'";
+		print userTableData;
 		if userTableData[0] is None:
 			return "InitProfile";
 		elif (readTableData is None) and (wishTableData is None):
@@ -236,6 +237,7 @@ def initProfile():
 #register
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+	print request.headers
 	if request.method == 'POST':
 		email = request.form['email']
 		password = request.form['password']
@@ -264,7 +266,7 @@ def check_Email():
 	con = mysql.connect()
 	cursor = con.cursor()
 
-	cursor.execute("select * from USER where email='" + email + "';")
+	cursor.execute("select * from USER where email='" + email + "'")
 	check_e = cursor.fetchone()
 
 	if check_e is None:
@@ -273,55 +275,19 @@ def check_Email():
 	else:
 		return "exist"
 
-@app.route('/bookDetail', methods=['POST','GET'])
-def book_Detail():
-	book_num = request.form['book_num']
-
-	con = mysql.connect()
-	cursor = con.cursor()
-
-	cursor.execute("select * from BOOKINFO where book_num='" + book_num + "';")
-
-	result = [];
-
-	colums = tuple([d[0] for d in cursor.description])
-
-	for row in cursor:
-		result.append(dict(zip(colums,row)))
-
-	print(result)
-
-	return json.dumps(result)
-
-
-@app.route('/count', methods=['POST'])
-def count():
-	ISBN = request.form['ISBN']
-
-	con = mysql.connect()
-	cursor = con.cursor()
-
-	cursor.execute("select READ_count,WISH_count from ISBN_PREFER where bookISBN='" + ISBN + "';")
-
-	result = [];
-
-	colums = tuple([d[0] for d in cursor.description])
-
-	for row in cursor:
-		result.append(dict(zip(colums,row)))
-
-	print(result)
-
-	return json.dumps(result)
 
 @app.route('/setBookFirst', methods=['POST','GET'])
+
 def setBookFirst():
 
-	cursor = connectDB();
-	
-	print 'connetctDB'
+	USER_email = user.email #맞음?
 
-	cursor.execute("select name,author,book_num,cover_img,ISBN from BOOKINFO order by rand() limit 15;")
+	cursor = connectDB();
+
+	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
+	#나의 read 에도 wish에도 없다면
+
+	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num='L0004';")
 
 	result = [];
 
@@ -340,15 +306,14 @@ def setBookFirst():
 
 def readBook():
 
-	result = request.get_json()
+	USER_email = user.email
+	bookInfoInNext_book_num = request.form['book_num']
 
-	#bookInfoInNext_book_num = request.form['book_num']
-
-	#cursor = connectDB()
+	cursor = connectDB()
 
 	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
-	#cursor.execute("insert USER_email, bookISBN values \ '"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
-
+	cursor.execute("insert USER_email, bookInfoInNEXT values \
+		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
 	# 넣은 후에 확인한다?
 
 	return 'OK!'
@@ -359,16 +324,12 @@ def readBook():
 
 def wishBook():
 
-	#USER_email = user.email
-
-	email = request.form['email']
-
+	USER_email = user.email
 	bookInfoInNext_book_num = request.form['book_num']
 
 	cursor = connectDB();
-
-	cursor.execute("insert USER_email, bookISBN values \
-		'"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
+	cursor.execute("insert USER_email, bookInfoInNEXT values \
+		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
 
 	return 'OK!'
 
@@ -543,11 +504,6 @@ def timelineButton():
 			columnName = buttonType+"Count";
 			tableName = buttonType.upper();
 			newLikeScrap(tableName,columnName,necessaryValue,email);
-		else:
-			postId,comment = necessaryValue.split('/');
-			postId = postId[6:];
-			comment = postId[7:];
-			newCommentOnPost(postId,email,comment);
 	#action is 0 == 버튼이 비활성화로 바뀐 경우
 	else:
 		if buttonType == "like" or buttonType == "scrap":
@@ -557,6 +513,21 @@ def timelineButton():
 		
 		print "delete";
 	
+	return "done";
+@app.route("/comment", methods=["POST"])
+def comment():
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
+	postId = request.form.get('postId');
+	comment = request.form.get('comment');
+	print request.headers;
+	print request.data;
+	print request.form
+	print email
+	print postId
+	print comment
+	newCommentOnPost(postId,email,comment);
 	return "done";
 
 
@@ -584,6 +555,66 @@ def posting():
 	conn.commit();
 	return "done";
 
+@app.route("/modifyPassword", methods=["POST"])
+def modifyPassword():
+	print request.headers
+	cookie = request.headers['Cookie'];
+	token = cookie[15:122]
+	user = load_token(token);
+	email = user.email;
+	newPassword = request.form.get('newPassword');
+	query = "update USER set password='"+newPassword+"'where email='"+email+"';"
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	cursor.execute(query);
+	conn.commit();
+	logout_user();
+	cursor = connectDB();
+	user = User.getUserFromDB(cursor, email);
+	login_user(user, remember=True, force=False);
+	return "done";
+
+@app.route("/modifyName", methods=["POST"])
+def modifyName():
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
+	newName = request.form.get('newName');
+	print newName;
+	print request.form
+	query = "update USER set userName='"+newName+"' where email='"+email+"';";
+	conn = mysql.connect();
+	cursor = conn.cursor();
+	print query;
+	cursor.execute(query);
+	conn.commit();
+	return "done";
+
+@app.route("/getUserInfo", methods=["POST"])
+def getUserInfo():
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
+	query = "select userName from USER where email='"+email+"';";
+	cursor = connectDB();
+	cursor.execute(query);
+	userName = cursor.fetchone();
+	query = "select count(*) from BOOKLIST_READ where USER_email='"+email+"';";
+	cursor.execute(query);
+	readCount = cursor.fetchone();
+	query = "select count(*) from BOOKLIST_WISH where USER_email='"+email+"';";
+	cursor.execute(query);
+	wishCount = cursor.fetchone();
+	
+	dataDict = dict();
+	dataDict['userEmail'] = email;
+	dataDict['userName'] = userName[0];
+	dataDict['readCount'] = readCount[0];
+	dataDict['wishCount'] = wishCount[0];
+	print json.dumps(dataDict);
+	return json.dumps(dataDict);
+	
+
 
 @app.route("/test", methods=["GET", "POST"])
 def test():
@@ -591,6 +622,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='10.73.45.83', port=5010);
-
+	app.run(debug=True, host='0.0.0.0', port=5013);
 

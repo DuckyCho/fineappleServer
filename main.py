@@ -12,6 +12,8 @@ from itsdangerous import URLSafeTimedSerializer;
 import datetime
 import time
 import json
+from pprint import pprint
+
 app = Flask(__name__);
 
 # 초기 설정
@@ -337,9 +339,14 @@ def setBookFirst():
 
 def readBook():
 
-	result = request.get_json()\
-	print(result)
+	result = request.form
+	print result
+	data = json.load(request)
+	print data
+	pprint(data)
 
+	print data[""][0]
+	
 	return 'OK!'
 
 
@@ -348,8 +355,8 @@ def readBook():
 
 def wishBook():
 
-	result = request.get_json()
-	print(result)
+	result = request.form
+	print result
 
 	return 'OK!'
 

@@ -350,12 +350,14 @@ def readBook():
 		cursor = con.cursor()
 		cursor.execute("insert into BOOKLIST_READ(USER_email, bookISBN) \
 			values  ('"+email+"','"+ ISBN[i] +"');")
+		con.commit()
 		cursor = con.cursor()
 		cursor.execute("INSERT INTO ISBN_PREFER(READ_count, bookISBN) \
 			VALUES (1, '"+ISBN[i]+"') ON DUPLICATE KEY UPDATE \
 			READ_count = READ_count+1;")
+		con.commit()
 
-return 'OK!'
+	return 'OK!'
 
 
 

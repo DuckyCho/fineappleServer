@@ -23,9 +23,6 @@ app.config['MYSQL_DATABASE_USER'] = 'secret';
 app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
 app.config['MYSQL_DATABASE_DB'] = 'secret';
 
-
-
-
 login_manager.init_app(app);
 mysql.init_app(app);
 
@@ -340,16 +337,8 @@ def setBookFirst():
 
 def readBook():
 
-	result = request.get_json()
-
-	#bookInfoInNext_book_num = request.form['book_num']
-
-	#cursor = connectDB()
-
-	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
-	#cursor.execute("insert USER_email, bookISBN values \ '"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
-
-	# 넣은 후에 확인한다?
+	result = request.get_json()\
+	print(result)
 
 	return 'OK!'
 
@@ -359,16 +348,8 @@ def readBook():
 
 def wishBook():
 
-	#USER_email = user.email
-
-	email = request.form['email']
-
-	bookInfoInNext_book_num = request.form['book_num']
-
-	cursor = connectDB();
-
-	cursor.execute("insert USER_email, bookISBN values \
-		'"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
+	result = request.get_json()
+	print(result)
 
 	return 'OK!'
 

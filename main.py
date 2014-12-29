@@ -296,7 +296,57 @@ def book_Detail():
 
 	return json.dumps(result)
 
+@app.route('/myReadBook', methods=['POST','GET'])
+def myReadBook():
+	#request의 헤더 부분을 프린트!
+	print request.headers
 
+	tokenName,token = request.headers.get("Cookie").split("=")
+
+	conn = mysql.connect()
+	cursor = conn.cursor()
+
+	user = load_token(token)
+	email = user.email
+
+	cursor.execute("select bookISBN from BOOKLIST_READ where USER_email='"+ email +"';")
+
+	result = []
+
+	colums = tuple([d[0] for d in cursor.description])
+
+	for row in cursor:
+		result.append(dict(zip(colums,row)))
+
+	print(result)
+
+	return json.dumps(result)
+
+
+@app.route('/myWishBook', methods=['POST', 'GRT'])
+def myWishBook():
+	tokenName,token = request.headers.get('Cookie').split("=")
+
+	conn = mysql.connect()
+	cursor = conn.cursor()
+
+	user = load_token(token)
+	email = user.email
+
+	cursor.execute("select bookISBN from BOOKLIST_WISH where USER_email='"+ email +"';")
+
+	result = []
+
+	colums = tuple([d[0] for d in cursor.description])
+
+	for row in cursor:
+		result.append(dict(zip(colums,row)))
+
+	print(result)
+
+	return json.dumps(result)
+
+	
 @app.route('/count', methods=['POST'])
 def count():
 	ISBN = request.form['ISBN']

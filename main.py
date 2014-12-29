@@ -19,9 +19,9 @@ app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'secret';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
-app.config['MYSQL_DATABASE_DB'] = 'secret';
+app.config['MYSQL_DATABASE_USER'] = 'root';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'next!!@@##$$'
+app.config['MYSQL_DATABASE_DB'] = 'fineapple';
 
 
 
@@ -275,12 +275,12 @@ def check_Email():
 
 @app.route('/bookDetail', methods=['POST','GET'])
 def book_Detail():
-	book_num = request.form['book_num']
+	ISBN = request.form['ISBN']
 
 	con = mysql.connect()
 	cursor = con.cursor()
 
-	cursor.execute("select * from BOOKINFO where book_num='" + book_num + "';")
+	cursor.execute("select * from BOOKINFO where ISBN='" + ISBN + "';")
 
 	result = [];
 

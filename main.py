@@ -25,6 +25,7 @@ app.config['MYSQL_DATABASE_DB'] = 'secret';
 
 
 
+
 login_manager.init_app(app);
 mysql.init_app(app);
 
@@ -263,7 +264,7 @@ def check_Email():
 	con = mysql.connect()
 	cursor = con.cursor()
 
-	cursor.execute("select * from USER where email='" + email + "'")
+	cursor.execute("select * from USER where email='" + email + "';")
 	check_e = cursor.fetchone()
 
 	if check_e is None:
@@ -272,19 +273,55 @@ def check_Email():
 	else:
 		return "exist"
 
+@app.route('/bookDetail', methods=['POST','GET'])
+def book_Detail():
+	book_num = request.form['book_num']
+
+	con = mysql.connect()
+	cursor = con.cursor()
+
+	cursor.execute("select * from BOOKINFO where book_num='" + book_num + "';")
+
+	result = [];
+
+	colums = tuple([d[0] for d in cursor.description])
+
+	for row in cursor:
+		result.append(dict(zip(colums,row)))
+
+	print(result)
+
+	return json.dumps(result)
+
+
+@app.route('/count', methods=['POST'])
+def count():
+	ISBN = request.form['ISBN']
+
+	con = mysql.connect()
+	cursor = con.cursor()
+
+	cursor.execute("select READ_count,WISH_count from ISBN_PREFER where bookISBN='" + ISBN + "';")
+
+	result = [];
+
+	colums = tuple([d[0] for d in cursor.description])
+
+	for row in cursor:
+		result.append(dict(zip(colums,row)))
+
+	print(result)
+
+	return json.dumps(result)
 
 @app.route('/setBookFirst', methods=['POST','GET'])
-
 def setBookFirst():
 
-	USER_email = user.email #맞음?
-
 	cursor = connectDB();
+	
+	print 'connetctDB'
 
-	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
-	#나의 read 에도 wish에도 없다면
-
-	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num='L0004';")
+	cursor.execute("select name,author,book_num,cover_img,ISBN from BOOKINFO order by rand() limit 15;")
 
 	result = [];
 
@@ -303,14 +340,15 @@ def setBookFirst():
 
 def readBook():
 
-	USER_email = user.email
-	bookInfoInNext_book_num = request.form['book_num']
+	result = request.get_json()
 
-	cursor = connectDB()
+	#bookInfoInNext_book_num = request.form['book_num']
+
+	#cursor = connectDB()
 
 	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
-	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
+	#cursor.execute("insert USER_email, bookISBN values \ '"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
+
 	# 넣은 후에 확인한다?
 
 	return 'OK!'
@@ -321,12 +359,16 @@ def readBook():
 
 def wishBook():
 
-	USER_email = user.email
+	#USER_email = user.email
+
+	email = request.form['email']
+
 	bookInfoInNext_book_num = request.form['book_num']
 
 	cursor = connectDB();
-	cursor.execute("insert USER_email, bookInfoInNEXT values \
-		'"+USER_email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
+
+	cursor.execute("insert USER_email, bookISBN values \
+		'"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
 
 	return 'OK!'
 
@@ -517,6 +559,7 @@ def timelineButton():
 	
 	return "done";
 
+
 @app.route("/posting", methods=["POST"])
 def posting():
 	print request.headers
@@ -541,11 +584,13 @@ def posting():
 	conn.commit();
 	return "done";
 
+
 @app.route("/test", methods=["GET", "POST"])
 def test():
 	return "test load!!";
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='0.0.0.0', port=5013);
+	app.run(debug=True, host='10.73.45.83', port=5010);
+
 

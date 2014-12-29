@@ -365,16 +365,23 @@ def readBook():
 
 def wishBook():
 
-	#USER_email = user.email
+	email = 'abc@abc.com'
+	ISBN = [];
+	result = request.form.values()
+	con = mysql.connect()
 
-	email = request.form['email']
-
-	bookInfoInNext_book_num = request.form['book_num']
-
-	cursor = connectDB();
-
-	cursor.execute("insert USER_email, bookISBN values \
-		'"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_WISH;")
+	for i in range(0, len(result)):
+		ISBN.append(result[i])
+		print ISBN[i];
+		cursor = con.cursor()
+		cursor.execute("insert into BOOKLIST_WISH(USER_email, bookISBN) \
+			values  ('"+email+"','"+ ISBN[i] +"');")
+		con.commit()
+		cursor = con.cursor()
+		cursor.execute("INSERT INTO ISBN_PREFER(WISH_count, bookISBN) \
+			VALUES (1, '"+ISBN[i]+"') ON DUPLICATE KEY UPDATE \
+			WISH_count = WISH_count+1;")
+		con.commit()
 
 	return 'OK!'
 

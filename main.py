@@ -19,9 +19,9 @@ app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'secret';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
-app.config['MYSQL_DATABASE_DB'] = 'secret';
+app.config['MYSQL_DATABASE_USER'] = 'root';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'next!!@@##$$'
+app.config['MYSQL_DATABASE_DB'] = 'finedb';
 
 
 login_manager.init_app(app);
@@ -330,19 +330,23 @@ def setBookFirst():
 @app.route('/readBook',methods=['POST','GET'])
 
 def readBook():
+	email = 'abc@abc.com'
+	ISBN = [];
+	result = request.form.values()
+	con = mysql.connect()
 
-	result = request.get_json()
+	for i in range(0, len(result)):
+		ISBN.append(result[i])
+		print ISBN[i];
+		cursor = con.cursor()
+		cursor.execute("insert into BOOKLIST_READ(USER_email, bookISBN) \
+			values  ('"+email+"','"+ ISBN[i] +"');")
+		cursor = con.cursor()
+		cursor.execute("INSERT INTO ISBN_PREFER(READ_count, bookISBN) \
+			VALUES (1, '"+ISBN[i]+"') ON DUPLICATE KEY UPDATE \
+			READ_count = READ_count+1;")
 
-	#bookInfoInNext_book_num = request.form['book_num']
-
-	#cursor = connectDB()
-
-	# 리드북에 포함되어 있나 확인하고 넣는다. O(n)
-	#cursor.execute("insert USER_email, bookISBN values \ '"+email+"','"+bookInfoInNext_book_num+"' from BOOKLIST_READ;")
-
-	# 넣은 후에 확인한다?
-
-	return 'OK!'
+return 'OK!'
 
 
 

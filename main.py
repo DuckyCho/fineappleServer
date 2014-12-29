@@ -289,7 +289,7 @@ def book_Detail():
 
 	print(result)
 
-	return result
+	return json.dumps(result)
 
 
 @app.route('/count', methods=['POST'])
@@ -301,7 +301,12 @@ def count():
 
 	cursor.execute("select READ_count,WISH_count from ISBN_PREFER where bookISBN='" + ISBN + "';")
 
-	result = cursor.fetchone()
+	result = [];
+
+	colums = tuple([d[0] for d in cursor.description])
+
+	for row in cursor:
+		result.append(dict(zip(colums,row)))
 
 	print(result)
 

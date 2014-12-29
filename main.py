@@ -339,7 +339,10 @@ def setBookFirst():
 @app.route('/readBook',methods=['POST','GET'])
 
 def readBook():
-	email = 'abc@abc.com'
+	print request.headers
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
 	ISBN = [];
 	result = request.form.values()
 	con = mysql.connect()
@@ -364,8 +367,10 @@ def readBook():
 @app.route('/wishBook', methods=['POST','GET'])
 
 def wishBook():
-
-	email = 'abc@abc.com'
+	print request.headers
+	tokenName,token = request.headers.get("Cookie").split("=");
+	user = load_token(token);
+	email = user.email;
 	ISBN = [];
 	result = request.form.values()
 	con = mysql.connect()

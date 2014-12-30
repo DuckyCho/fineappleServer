@@ -19,8 +19,8 @@ app.secret_key = "secret"
 login_manager = LoginManager()
 mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
-app.config['MYSQL_DATABASE_USER'] = 'root';
-app.config['MYSQL_DATABASE_PASSWORD'] = 'next!!@@##$$'
+app.config['MYSQL_DATABASE_USER'] = 'secret';
+app.config['MYSQL_DATABASE_PASSWORD'] = 'secret';
 app.config['MYSQL_DATABASE_DB'] = 'finedb';
 
 
@@ -156,13 +156,22 @@ def printUserStatus(user, comment):
 	print "****userEmail : %s" % user.email;
 	print "****userLoginDate : %s" % user.loginDate;
 
+def  getTokenFromCookie(cookie):
+	main,tail = cookie.split(';');
+	tokenName,token = main.split('=');
+	print "getToken From Cookie : ",token;
+	return token;
 
 #Application Module
 
 @app.route("/veryFirstConnect", methods=["POST"])
 def veryFirstConnect():
 	print request.headers;
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	if user != None:
 		printUserStatus(user, 'newConnection - /veryFirstConnection');
@@ -217,11 +226,15 @@ def login():
 @app.route("/initProfile", methods=["POST"])
 def initProfile():
 	print request.headers
-	tokenName,token = request.headers.get("Cookie").split("=");
-	conn = mysql.connect();
-	cursor = conn.cursor();
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
+	conn = mysql.connect();
+	cursor = conn.cursor();
 	attendOrNot = request.form.get('attendOrNot');
 	semesterNum = request.form.get('semesterNum');
 	majorFirst = request.form.get('majorFirst');
@@ -252,7 +265,9 @@ def register():
 
 		cursor.execute(query)
 		con.commit()
-
+		cursor = connectDB();
+		user = User.getUserFromDB(cursor, email);
+		login_user(user, remember=True, force=False);
 		print("success!")
 		return "OK! Query"
 	
@@ -300,14 +315,16 @@ def book_Detail():
 def myReadBook():
 	#request의 헤더 부분을 프린트!
 	print request.headers
-
-	tokenName,token = request.headers.get("Cookie").split("=")
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
+	user = load_token(token);
+	email = user.email;
 
 	conn = mysql.connect()
 	cursor = conn.cursor()
-
-	user = load_token(token)
-	email = user.email
 
 	cursor.execute("select bookISBN from BOOKLIST_READ where USER_email='"+ email +"';")
 
@@ -325,13 +342,17 @@ def myReadBook():
 
 @app.route('/myWishBook', methods=['POST', 'GET'])
 def myWishBook():
-	tokenName,token = request.headers.get('Cookie').split("=")
-
+	
 	conn = mysql.connect()
 	cursor = conn.cursor()
 
-	user = load_token(token)
-	email = user.email
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
+	user = load_token(token);
+	email = user.email;
 
 	cursor.execute("select bookISBN from BOOKLIST_WISH where USER_email='"+ email +"';")
 
@@ -373,14 +394,20 @@ def count():
 
 def setBookFirst():
 
-	USER_email = user.email #맞음?
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
+	user = load_token(token);
+	USER_email = user.email;
 
 	cursor = connectDB();
 
 	#기본 세팅용 book_num이 존재 (Array? DB 안에?) O(n)?
 	#나의 read 에도 wish에도 없다면
 
-	cursor.execute("select name,author,cover_img,book_num from BOOKINFO where book_num='L0004';")
+	cursor.execute("select name,author,book_num,cover_img,ISBN from BOOKINFO order by rand() limit 15;")
 
 	result = [];
 
@@ -398,8 +425,13 @@ def setBookFirst():
 @app.route('/readBook',methods=['POST','GET'])
 
 def readBook():
-
-	USER_email = user.email
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
+	user = load_token(token);
+	USER_email = user.email;
 	bookInfoInNext_book_num = request.form['book_num']
 
 	cursor = connectDB()
@@ -416,7 +448,12 @@ def readBook():
 @app.route('/wishBook', methods=['POST','GET'])
 
 def wishBook():
-
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
+	user = load_token(token);
 	USER_email = user.email
 	bookInfoInNext_book_num = request.form['book_num']
 
@@ -475,7 +512,11 @@ def timeline():
 
 @app.route("/getMyLikePostInfo",methods=["POST"])
 def getMyLikePostInfo():
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
 	cursor = connectDB();
@@ -498,7 +539,11 @@ def mypost():
 		cursor_count.execute("select postId from POST order by postId desc limit 1;");	
 		count = cursor_count.fetchone();
 		count = str(count[0]+1);
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
 	print request.headers;
@@ -588,10 +633,14 @@ def timelineButton():
 	print action
 	print buttonType
 	print necessaryValue
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
-	#if action is 1 == 버튼이 활성화 상태인 경우
+		#if action is 1 == 버튼이 활성화 상태인 경우
 	if int(action) is 1:
 		if buttonType == "like" or buttonType == "scrap":
 			columnName = buttonType+"Count";
@@ -609,7 +658,11 @@ def timelineButton():
 	return "done";
 @app.route("/comment", methods=["POST"])
 def comment():
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
 	postId = request.form.get('postId');
@@ -631,7 +684,11 @@ def posting():
 	post = request.form.get('post');
 	postImg = request.form.get('postImg');
 	postISBN = request.form.get('postISBN');
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
 	conn = mysql.connect();
@@ -652,7 +709,10 @@ def posting():
 def modifyPassword():
 	print request.headers
 	cookie = request.headers['Cookie'];
-	token = cookie[15:122]
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
 	newPassword = request.form.get('newPassword');
@@ -669,7 +729,11 @@ def modifyPassword():
 
 @app.route("/modifyName", methods=["POST"])
 def modifyName():
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
 	newName = request.form.get('newName');
@@ -685,7 +749,11 @@ def modifyName():
 
 @app.route("/getUserInfo", methods=["POST"])
 def getUserInfo():
-	tokenName,token = request.headers.get("Cookie").split("=");
+	cookie = request.headers['Cookie'];
+	if ';' in cookie:
+		token = getTokenFromCookie(cookie);
+	else:
+		tokenName,token = cookie.split('=');
 	user = load_token(token);
 	email = user.email;
 	query = "select userName from USER where email='"+email+"';";

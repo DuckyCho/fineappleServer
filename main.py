@@ -21,7 +21,7 @@ mysql = MySQL();
 login_serializer = URLSafeTimedSerializer(app.secret_key);
 app.config['MYSQL_DATABASE_USER'] = 'root';
 app.config['MYSQL_DATABASE_PASSWORD'] = 'next!!@@##$$'
-app.config['MYSQL_DATABASE_DB'] = 'fineapple';
+app.config['MYSQL_DATABASE_DB'] = 'finedb';
 
 
 
@@ -323,7 +323,7 @@ def myReadBook():
 	return json.dumps(result)
 
 
-@app.route('/myWishBook', methods=['POST', 'GRT'])
+@app.route('/myWishBook', methods=['POST', 'GET'])
 def myWishBook():
 	tokenName,token = request.headers.get('Cookie').split("=")
 
@@ -716,5 +716,5 @@ def test():
 
 
 if __name__ == "__main__":
-	app.run(debug=True, host='0.0.0.0', port=5013);
+	app.run(debug=True, host='10.73.45.83', port=5010);
 
